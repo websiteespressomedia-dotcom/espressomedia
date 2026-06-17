@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "react-router-dom";
 
 export default function CustomCursor() {
   const [position, setPosition] = useState({ x: -100, y: -100 });
   const [isHovered, setIsHovered] = useState(false);
+  const [hoverType, setHoverType] = useState(""); // "view" or "view-white"
+  const [isInWorkSection, setIsInWorkSection] = useState(false);
   const location = useLocation();
 
   // Reset custom cursor state when navigating to a new page
   useEffect(() => {
     setIsHovered(false);
+    setHoverType("");
+    setIsInWorkSection(false);
     document.body.classList.remove("custom-cursor-hovered");
   }, [location.pathname]);
 
@@ -20,22 +24,43 @@ export default function CustomCursor() {
 
     const handleMouseMove = (e) => {
       setPosition({ x: e.clientX, y: e.clientY });
+
+      // Check if mouse is over Work section
+      const isOverWork = e.target.closest("#work");
+      if (isOverWork) {
+        setIsInWorkSection(true);
+        document.body.classList.add("custom-cursor-hovered");
+      } else {
+        setIsInWorkSection(false);
+        // Only remove class if we aren't hovering over another "view" elements
+        const isOverView = e.target.closest('[data-cursor="view"], [data-cursor="view-white"]');
+        if (!isOverView) {
+          document.body.classList.remove("custom-cursor-hovered");
+        }
+      }
     };
 
     const handleMouseOver = (e) => {
-      // Find closest element marked as data-cursor="view"
-      const element = e.target.closest('[data-cursor="view"]');
+      const element = e.target.closest('[data-cursor]');
       if (element) {
-        setIsHovered(true);
-        document.body.classList.add("custom-cursor-hovered");
+        const cursorVal = element.getAttribute('data-cursor');
+        if (cursorVal === 'view' || cursorVal === 'view-white') {
+          setIsHovered(true);
+          setHoverType(cursorVal);
+          document.body.classList.add("custom-cursor-hovered");
+        }
       }
     };
 
     const handleMouseOut = (e) => {
-      const element = e.target.closest('[data-cursor="view"]');
+      const element = e.target.closest('[data-cursor]');
       if (element) {
         setIsHovered(false);
-        document.body.classList.remove("custom-cursor-hovered");
+        setHoverType("");
+        const isOverWork = e.relatedTarget ? e.relatedTarget.closest("#work") : null;
+        if (!isOverWork) {
+          document.body.classList.remove("custom-cursor-hovered");
+        }
       }
     };
 
@@ -50,22 +75,53 @@ export default function CustomCursor() {
       document.body.classList.remove("custom-cursor-hovered");
     };
   }, []);
+
+  const isWhiteCapsule = isHovered && hoverType === "view-white";
+  const isRustCapsule = isHovered && hoverType === "view";
+  const isDot = isInWorkSection && !isHovered;
+
+  let width = 0;
+  let height = 0;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  if (isWhiteCapsule || isRustCapsule) {
+    width = 110;
+    height = 60;
+    offsetX = -55;
+    offsetY = -30;
+  } else if (isDot) {
+    width = 8;
+    height = 8;
+    offsetX = -4;
+    offsetY = -4;
+  }
+
+  const active = isHovered || isDot;
+
   return (
     <motion.div
       style={{
         position: "fixed",
         top: 0,
         left: 0,
-        x: position.x - 55,
-        y: position.y - 30,
         pointerEvents: "none",
         zIndex: 99999,
-        width: 110,
-        height: 60,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
       }}
       animate={{
-        scale: isHovered ? 1 : 0,
-        opacity: isHovered ? 1 : 0,
+        x: position.x + offsetX,
+        y: position.y + offsetY,
+        width: width,
+        height: height,
+        borderRadius: isDot ? "50%" : "30px",
+        backgroundColor: isRustCapsule ? "#8a563a" : "#FFFFFF",
+        border: isRustCapsule ? "1px solid #8a563a" : "none",
+        scale: active ? 1 : 0,
+        opacity: active ? 1 : 0,
       }}
       transition={{
         type: "spring",
@@ -74,53 +130,24 @@ export default function CustomCursor() {
         mass: 0.5,
       }}
     >
-      <svg width="110" height="60" viewBox="0 0 110 60" className="w-full h-full drop-shadow-md">
-        <defs>
-          <mask id="view-text-mask">
-            {/* Everything white is kept */}
-            <rect x="0" y="0" width="110" height="60" rx="30" fill="#FFFFFF" />
-            {/* Black cuts out the text */}
-            <text
-              x="55"
-              y="30"
-              textAnchor="middle"
-              dominantBaseline="central"
-              fill="#000000"
-              fontSize="12"
-              fontWeight="900"
-              fontFamily="'Century Gothic Paneuropean', 'Century Gothic', sans-serif"
-              letterSpacing="0.25em"
-            >
-              VIEW
-            </text>
-          </mask>
-        </defs>
-        
-        {/* Transparent dark red/rust capsule background */}
-        <rect
-          x="0"
-          y="0"
-          width="110"
-          height="60"
-          rx="30"
-          fill="#8a563a"
-          opacity="0.85"
-          mask="url(#view-text-mask)"
-        />
-        
-        {/* Subtle border around the oval */}
-        <rect
-          x="0.5"
-          y="0.5"
-          width="109"
-          height="59"
-          rx="29.5"
-          fill="none"
-          stroke="#8a563a"
-          strokeWidth="1"
-          opacity="0.95"
-        />
-      </svg>
+      <AnimatePresence>
+        {isHovered && (
+          <motion.span
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+            className={`text-[12px] font-black tracking-[0.25em] font-sans ${
+              isRustCapsule ? "text-white" : "text-black"
+            }`}
+            style={{
+              fontFamily: "'Century Gothic Paneuropean', 'Century Gothic', sans-serif"
+            }}
+          >
+            VIEW
+          </motion.span>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

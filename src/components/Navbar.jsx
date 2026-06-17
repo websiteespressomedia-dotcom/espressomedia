@@ -16,6 +16,7 @@ export default function Navbar() {
     { name: "HOME", href: "#home" },
     { name: "ABOUT US", href: "#about-us" },
     { name: "SERVICES", href: "#services" },
+    { name: "WORK", href: "#work" },
     { name: "TESTIMONIAL", href: "#testimonials" },
     { name: "CASE STUDIES", href: "#case-studies" },
     { name: "CAREERS", href: "/careers", isRoute: true },
@@ -88,7 +89,7 @@ export default function Navbar() {
 
   // Scroll Spy Observer
   useEffect(() => {
-    const sections = ["home", "about-us", "services", "testimonials", "case-studies"];
+    const sections = ["home", "about-us", "services", "work", "testimonials", "case-studies"];
     const observerOptions = {
       root: null,
       rootMargin: "-45% 0px -45% 0px",

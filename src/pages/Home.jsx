@@ -5,7 +5,6 @@ import WhatWeOffer from "../components/WhatWeOffer.jsx";
 import Problem from "../components/Problem.jsx";
 import OurProcess from "../components/Ourprocess.jsx";
 import CaseStudies from "../components/CaseStudies.jsx";
-import Work from "../components/Work.jsx";
 import FAQ from "../components/FAQ.jsx";
 import Form from "../components/Form.jsx";
 import { lazy, Suspense, useEffect } from "react";
@@ -49,9 +48,6 @@ export default function Home() {
       </section>
       <section id="case-studies">
         <CaseStudies />
-      </section>
-      <section id="work">
-        <Work />
       </section>
       <Suspense fallback={<div className="text-white text-center py-20">Loading testimonials...</div>}>
         <section id="testimonials">

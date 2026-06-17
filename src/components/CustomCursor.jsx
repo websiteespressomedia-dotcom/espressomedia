@@ -6,14 +6,12 @@ export default function CustomCursor() {
   const [position, setPosition] = useState({ x: -100, y: -100 });
   const [isHovered, setIsHovered] = useState(false);
   const [hoverType, setHoverType] = useState(""); // "view" or "view-white"
-  const [isInWorkSection, setIsInWorkSection] = useState(false);
   const location = useLocation();
 
   // Reset custom cursor state when navigating to a new page
   useEffect(() => {
     setIsHovered(false);
     setHoverType("");
-    setIsInWorkSection(false);
     document.body.classList.remove("custom-cursor-hovered");
   }, [location.pathname]);
 
@@ -25,18 +23,10 @@ export default function CustomCursor() {
     const handleMouseMove = (e) => {
       setPosition({ x: e.clientX, y: e.clientY });
 
-      // Check if mouse is over Work section
-      const isOverWork = e.target.closest("#work");
-      if (isOverWork) {
-        setIsInWorkSection(true);
-        document.body.classList.add("custom-cursor-hovered");
-      } else {
-        setIsInWorkSection(false);
-        // Only remove class if we aren't hovering over another "view" elements
-        const isOverView = e.target.closest('[data-cursor="view"], [data-cursor="view-white"]');
-        if (!isOverView) {
-          document.body.classList.remove("custom-cursor-hovered");
-        }
+      // Only remove class if we aren't hovering over another "view" elements
+      const isOverView = e.target.closest('[data-cursor="view"], [data-cursor="view-white"]');
+      if (!isOverView) {
+        document.body.classList.remove("custom-cursor-hovered");
       }
     };
 
@@ -57,10 +47,7 @@ export default function CustomCursor() {
       if (element) {
         setIsHovered(false);
         setHoverType("");
-        const isOverWork = e.relatedTarget ? e.relatedTarget.closest("#work") : null;
-        if (!isOverWork) {
-          document.body.classList.remove("custom-cursor-hovered");
-        }
+        document.body.classList.remove("custom-cursor-hovered");
       }
     };
 
@@ -78,7 +65,6 @@ export default function CustomCursor() {
 
   const isWhiteCapsule = isHovered && hoverType === "view-white";
   const isRustCapsule = isHovered && hoverType === "view";
-  const isDot = isInWorkSection && !isHovered;
 
   let width = 0;
   let height = 0;
@@ -90,14 +76,9 @@ export default function CustomCursor() {
     height = 60;
     offsetX = -55;
     offsetY = -30;
-  } else if (isDot) {
-    width = 8;
-    height = 8;
-    offsetX = -4;
-    offsetY = -4;
   }
 
-  const active = isHovered || isDot;
+  const active = isHovered;
 
   return (
     <motion.div
@@ -117,17 +98,21 @@ export default function CustomCursor() {
         y: position.y + offsetY,
         width: width,
         height: height,
-        borderRadius: isDot ? "50%" : "30px",
+        borderRadius: "30px",
         backgroundColor: isRustCapsule ? "#8a563a" : "#FFFFFF",
         border: isRustCapsule ? "1px solid #8a563a" : "none",
         scale: active ? 1 : 0,
         opacity: active ? 1 : 0,
       }}
       transition={{
-        type: "spring",
-        damping: 30,
-        stiffness: 250,
-        mass: 0.5,
+        x: { type: "spring", stiffness: 800, damping: 45, mass: 0.2 },
+        y: { type: "spring", stiffness: 800, damping: 45, mass: 0.2 },
+        default: {
+          type: "spring",
+          damping: 30,
+          stiffness: 250,
+          mass: 0.5,
+        }
       }}
     >
       <AnimatePresence>
